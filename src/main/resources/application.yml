@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: spring-ai
+#  make sure before starting this application u run the codellama locally
+  ai:
+    ollama:
+      chat:
+        model: codellama:latest
+      base-url: http://localhost:11434/
