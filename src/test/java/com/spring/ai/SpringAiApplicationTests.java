@@ -8,7 +8,9 @@ class SpringAiApplicationTests {
 
 	@Test
 	void contextLoads() {
-		/**/
+		/*
+		* default test method
+		* */
 	}
 
 }
