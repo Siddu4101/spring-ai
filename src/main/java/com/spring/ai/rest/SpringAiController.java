@@ -63,6 +63,7 @@ class SpringAiController {
 
         /*setting default chat options this can be done at any level for chat client(while building chat client too) */
         /*at prompt level */
+        /*higher the temp more the inconsistency */
         Prompt prompt = new Prompt("get a new topic and some short description about the topic you chosen and Respond ONLY with a single valid JSON object, not an array"
                 , OllamaOptions.builder().temperature(0.8).build());
 
@@ -84,5 +85,16 @@ class SpringAiController {
                         .entity(News.class)/*to map the response to a structure*/
 
         );
+
+    }
+
+    @GetMapping("/template-test")
+    public ResponseEntity<String> getNewInfo(@RequestParam String topic){
+        /*using prompt template to add user query */
+        return ResponseEntity.ok(chatClient
+                .prompt()
+                .user(u-> u.text("Give me a brief information about the {topic}").param("topic", topic))
+                .call()
+                .content());
     }
 }
