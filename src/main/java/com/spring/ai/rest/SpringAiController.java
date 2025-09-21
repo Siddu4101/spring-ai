@@ -3,7 +3,11 @@ package com.spring.ai.rest;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.metadata.ChatResponseMetadata;
 import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.chat.prompt.SystemPromptTemplate;
 import org.springframework.ai.ollama.api.OllamaOptions;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -14,12 +18,20 @@ import com.spring.ai.model.News;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1/spring-ai")
 class SpringAiController {
 
     private final ChatClient chatClient;
+
+    @Value("classpath:/prompt/user-message.st")
+    private Resource userResource;
+
+    @Value("classpath:/prompt/system-message.st")
+    private Resource systemResource;
 
     public SpringAiController(ChatClient.Builder chatClientBuilder) {
         this.chatClient = chatClientBuilder.build();
@@ -90,11 +102,60 @@ class SpringAiController {
 
     @GetMapping("/template-test")
     public ResponseEntity<String> getNewInfo(@RequestParam String topic){
-        /*using prompt template to add user query */
-        return ResponseEntity.ok(chatClient
+        /*using consumer to create prompt */
+        String responseViaConsumerPrompt = chatClient
                 .prompt()
-                .user(u-> u.text("Give me a brief information about the {topic}").param("topic", topic))
+                .user(u -> u.text("Give me a brief information about the {topic}").param("topic", topic))
                 .call()
-                .content());
+                .content();
+        log.info("Response via consumer prompt {}", responseViaConsumerPrompt);
+
+
+
+        /*using prompt template to create a prompt*/
+        /*1.create a template*/
+        PromptTemplate userTemplate = PromptTemplate.builder().template("Tell me more about the {topic}? and why it is used?").build();
+
+        /*2.render it to add the params*/
+        String renderedPrompt = userTemplate.render(Map.of("topic", topic));
+
+        /*3.create prompt out of it*/
+        Prompt userPrompt = new Prompt(renderedPrompt);
+
+        /*4.use this prompt for the request*/
+        String content = chatClient.prompt(userPrompt).call().content();
+        log.info("response via PromptTemplate(userTemplate){} ", content);
+
+
+        /*5. we can add the System templates too*/
+        SystemPromptTemplate systemTemplate = SystemPromptTemplate.builder().template("Act as a all known agentic AI who can answer all the question").build();
+
+        /*6. render this */
+        String renderSystemPrompt = systemTemplate.render();
+
+        String responseWithUserAndSystemTemplate = chatClient.prompt(userPrompt)
+                .system(renderSystemPrompt)
+                .call()
+                .content();
+        log.info("Response from system + user prompt template {}", responseWithUserAndSystemTemplate);
+
+
+        /*Using fluent api*/
+
+        String responseViaFluentApiTemplate = chatClient.prompt()
+                .user(u -> u.text("Tell me more about the {topic}? and why it is used?").param("topic", topic))
+                .system(s -> s.text("consider you are experienced person in the {topic} field and then answer this question").param("topic", topic))
+                .call()
+                .content();
+        log.info("The response from the fluent api templating is {}", responseViaFluentApiTemplate);
+
+        /*Using resource from the file*/
+        String responseViaResourceTemplate = chatClient.prompt()
+                .user(u-> u.text(userResource).param("topic", topic))
+                .system(s -> s.text(systemResource).param("topic", topic))
+                .call()
+                .content();
+        log.info("The response from the fluent api templating is {}", responseViaResourceTemplate);
+        return ResponseEntity.ok(responseViaResourceTemplate);
     }
 }
