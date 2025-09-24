@@ -164,6 +164,7 @@ class SpringAiController {
 
     @GetMapping("/advisor")
     public ResponseEntity<String> testAdvisor(@RequestParam String q){
+        log.info("test advisor / interceptor");
         /*this advisor is mainly used asa interceptor between model request and response */
         /*we have one safeguard advisor which can handle bad words and simple log one iss to log the info before sending and receiving data from chat model */
         return ResponseEntity.ok(chatClient.prompt(q)
