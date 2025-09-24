@@ -1,6 +1,8 @@
 package com.spring.ai.rest;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.client.advisor.SafeGuardAdvisor;
+import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.metadata.ChatResponseMetadata;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
@@ -18,6 +20,7 @@ import com.spring.ai.model.News;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -157,5 +160,15 @@ class SpringAiController {
                 .content();
         log.info("The response from the fluent api templating is {}", responseViaResourceTemplate);
         return ResponseEntity.ok(responseViaResourceTemplate);
+    }
+
+    @GetMapping("/advisor")
+    public ResponseEntity<String> testAdvisor(@RequestParam String q){
+        /*this advisor is mainly used asa interceptor between model request and response */
+        /*we have one safeguard advisor which can handle bad words and simple log one iss to log the info before sending and receiving data from chat model */
+        return ResponseEntity.ok(chatClient.prompt(q)
+                .advisors(new SimpleLoggerAdvisor(),new SafeGuardAdvisor(List.of("sid", "game")))
+                .call()
+                .content());
     }
 }
