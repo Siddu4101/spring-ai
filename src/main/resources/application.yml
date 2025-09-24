@@ -7,3 +7,13 @@ spring:
       chat:
         model: codellama:latest
       base-url: http://localhost:11434/
+
+#for log info via advisor (interceptor) enable debug logging for that package
+logging:
+  level:
+    org:
+      springframework:
+        ai:
+          chat:
+            client:
+              advisor: debug
