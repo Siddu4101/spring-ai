@@ -1,5 +1,6 @@
 package com.spring.ai.rest;
 
+import com.spring.ai.advisor.TokenInfoAdvisor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.SafeGuardAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
@@ -172,4 +173,15 @@ class SpringAiController {
                 .call()
                 .content());
     }
+
+    @GetMapping("/custom-advisor")
+    public ResponseEntity<String> testCustomAdvisor(@RequestParam String q){
+        log.info("test custom advisor / interceptor");
+        return ResponseEntity.ok(chatClient.prompt(q)
+                        .system("as a great professor in java language")
+                .advisors(new TokenInfoAdvisor())
+                .call()
+                .content());
+    }
+
 }
