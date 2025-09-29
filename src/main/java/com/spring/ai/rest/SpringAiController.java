@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.spring.ai.model.News;
 
 import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 import java.util.Map;
@@ -181,6 +182,15 @@ class SpringAiController {
                         .system("as a great professor in java language")
                 .advisors(new TokenInfoAdvisor())
                 .call()
+                .content());
+    }
+
+    @GetMapping("/streaming-response")
+    public ResponseEntity<Flux<String>> streamingResponseForQuery(@RequestParam String q){
+        log.info("streaming response test");
+        return ResponseEntity.ok(chatClient.prompt(q)
+                .system("as a great professor in java language")
+                .stream()
                 .content());
     }
 
