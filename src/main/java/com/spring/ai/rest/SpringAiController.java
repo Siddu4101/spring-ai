@@ -9,6 +9,7 @@ import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.chat.prompt.SystemPromptTemplate;
 import org.springframework.ai.ollama.api.OllamaOptions;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,7 @@ import java.util.Map;
 @RequestMapping("/api/v1/spring-ai")
 class SpringAiController {
 
+
     private final ChatClient chatClient;
 
     @Value("classpath:/prompt/user-message.st")
@@ -38,10 +40,9 @@ class SpringAiController {
     @Value("classpath:/prompt/system-message.st")
     private Resource systemResource;
 
-    public SpringAiController(ChatClient.Builder chatClientBuilder) {
-        this.chatClient = chatClientBuilder.build();
+    SpringAiController(ChatClient chatClient) {
+        this.chatClient = chatClient;
     }
-
 
     @GetMapping("/chat")
     public ResponseEntity<String> askQuestion(@RequestParam String q){
